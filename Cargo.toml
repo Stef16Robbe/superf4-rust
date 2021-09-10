@@ -1,0 +1,13 @@
+[package]
+name = "superf4-rust"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# I tried [dependencies] \n winapi = "0.3", found this in a random pr, it works. (https://github.com/xu-cheng/howlong/issues/3)
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = [
+    "errhandlingapi",
+    "processthreadsapi",
+] }
