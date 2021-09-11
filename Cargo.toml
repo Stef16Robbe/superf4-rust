@@ -8,6 +8,8 @@ edition = "2018"
 # I tried [dependencies] \n winapi = "0.3", found this in a random pr, it works. (https://github.com/xu-cheng/howlong/issues/3)
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = [
-    "errhandlingapi",
     "processthreadsapi",
+    "tlhelp32",
+    "winnt",
+    "handleapi",
 ] }
