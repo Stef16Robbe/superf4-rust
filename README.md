@@ -25,6 +25,12 @@ basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 - https://doc.rust-lang.org/std/mem/fn.size_of.html
 - https://users.rust-lang.org/t/indexing-in-raw-pointer/58559
 - https://stackoverflow.com/questions/2812760/print-tchar-on-console
+- https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
+- https://docs.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-process32firstw 
+- https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStringExt.html#tymethod.from_wide
+- 
+- 
+- 
 - 
 - 
 - 

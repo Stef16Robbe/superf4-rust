@@ -1,9 +1,11 @@
 use winapi::um::processthreadsapi::{TerminateProcess, OpenProcess};
 use winapi::um::winnt::PROCESS_ALL_ACCESS;
-use winapi::um::tlhelp32::{Process32Next, Process32First, CreateToolhelp32Snapshot, TH32CS_SNAPPROCESS, PROCESSENTRY32};
+use winapi::um::tlhelp32::{Process32NextW, Process32FirstW, CreateToolhelp32Snapshot, TH32CS_SNAPPROCESS, PROCESSENTRY32W};
 use winapi::um::winnt::HANDLE;
 use winapi::um::handleapi::CloseHandle;
 use std::mem::size_of;
+use std::os::windows::ffi::OsStringExt;
+use std::ffi::OsString;
 // use winapi::ctypes::{__int64, __uint64, c_char, c_int, c_long, c_short, c_uint, c_ulong, c_void, wchar_t};
 // use winapi::shared::minwindef::{
 //     BOOL, DWORD, LPBYTE, LPCVOID, LPDWORD, LPFILETIME, LPVOID, PBOOL, PDWORD, PULONG, UINT, WORD
@@ -28,7 +30,7 @@ unsafe fn kill_process() -> HANDLE {
 
 fn get_processes() {
     let h_process_snap: HANDLE;
-    let mut pe32 = &mut PROCESSENTRY32{
+    let mut pe32 = &mut PROCESSENTRY32W{
         dwSize: 0,
         cntUsage: 0,
         th32ProcessID: 0,
@@ -46,20 +48,23 @@ fn get_processes() {
     }
     println!("{:?}", h_process_snap);
 
-    pe32.dwSize = size_of::<PROCESSENTRY32>() as u32;
+    pe32.dwSize = size_of::<PROCESSENTRY32W>() as u32;
     println!("{:?}", pe32.dwSize);
 
     unsafe {
-        if Process32First(h_process_snap, pe32) == 0 {
+        if Process32FirstW(h_process_snap, pe32) == 0 {
             CloseHandle(h_process_snap);
             println!("can't get a process snapshot");
             // return false
         }
 
-        while Process32Next(h_process_snap, pe32) != 0 {
-            // array `[i8; 260]`
-            // TODO: UNICODE printing (https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi)
-            println!("{:?}", pe32.szExeFile);
+        while Process32NextW(h_process_snap, pe32) != 0 {
+            // https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
+            let os_string = OsString::from_wide(&pe32.szExeFile[..]);
+            // ExeFile names have a lot of trailing 0's, remove them...
+            let exe_files: String = os_string.into_string().unwrap().replace("\u{0}", "");
+            println!("{:?}", exe_files);
+
         }
     }
 
