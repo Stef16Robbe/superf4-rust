@@ -20,16 +20,12 @@ unsafe fn kill_process(process_id: u32) -> HANDLE {
     let h_process: HANDLE;
 
     // Powershell: "Get-Process"
-    // example, spotify Id  = 1736...
+    // example, Spotify id  = 1736...
     // 419 | 53 | 63152 | 105304 | 16.20 | 1488 | 1 | Spotify
     h_process = OpenProcess(PROCESS_ALL_ACCESS, 0, process_id);
 
-    // println!("{:?}", h_process);
-
     TerminateProcess(h_process, 1);
 
-    // returns same id cause process hasn't exited yet when this is run...
-    // println!("{:?}", h_process);
     h_process
 }
 
@@ -48,36 +44,26 @@ fn get_all_processes() {
         szExeFile: [0; 260],
     };
 
+    pe32.dwSize = size_of::<PROCESSENTRY32W>() as u32;
+    
     unsafe {
         h_process_snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    }
-
-    pe32.dwSize = size_of::<PROCESSENTRY32W>() as u32;
-
-    unsafe {
-        if Process32FirstW(h_process_snap, pe32) == 0 {
-            CloseHandle(h_process_snap);
-            println!("can't get a process snapshot");
-            // return false
-        }
-
-        while Process32NextW(h_process_snap, pe32) != 0 {
-            // https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
-            let os_string = OsString::from_wide(&pe32.szExeFile[..]);
-            // ExeFile names have a lot of trailing 0's, remove them...
-            let exe_files: String = os_string.into_string().unwrap().replace("\u{0}", "");
-            
-            for file_name in exe_files.split("\n") {
-                println!("{}", file_name);
+        if Process32FirstW(h_process_snap, pe32) != 0 {
+            while Process32NextW(h_process_snap, pe32) != 0 {
+                // https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
+                let os_string = OsString::from_wide(&pe32.szExeFile[..]);
+                // ExeFile names have a lot of trailing 0's, remove them...
+                let exe_files: String = os_string.into_string().unwrap().replace("\u{0}", "");
+                
+                for file_name in exe_files.split("\n") {
+                    println!("{}", file_name);
+                }
             }
-
+        } else {
+            println!("can't get a process snapshot");
         }
-    }
-
-    unsafe {
         CloseHandle(h_process_snap);
     }
-
 }
 
 // TODO:
@@ -99,30 +85,22 @@ fn get_process_ids(process_name: &str) -> Vec<u32> {
         szExeFile: [0; 260],
     };
 
+    pe32.dwSize = size_of::<PROCESSENTRY32W>() as u32;
+    
     unsafe {
         h_process_snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    }
-
-    pe32.dwSize = size_of::<PROCESSENTRY32W>() as u32;
-
-    unsafe {
-        if Process32FirstW(h_process_snap, pe32) == 0 {
-            CloseHandle(h_process_snap);
-            println!("can't get a process snapshot");
-            // return false
-        }
-
-        while Process32NextW(h_process_snap, pe32) != 0 {
-            let os_string = OsString::from_wide(&pe32.szExeFile[..]);
-            let exe_file_string: String = os_string.into_string().unwrap().replace("\u{0}", "");
-
-            if exe_file_string == process_name {
-                process_ids.push(pe32.th32ProcessID)
+        if Process32FirstW(h_process_snap, pe32) != 0 {
+            while Process32NextW(h_process_snap, pe32) != 0 {
+                let os_string = OsString::from_wide(&pe32.szExeFile[..]);
+                let exe_file_string: String = os_string.into_string().unwrap().replace("\u{0}", "");
+    
+                if exe_file_string == process_name {
+                    process_ids.push(pe32.th32ProcessID)
+                }
             }
+        } else {
+            println!("can't get a process snapshot");
         }
-    }
-
-    unsafe {
         CloseHandle(h_process_snap);
     }
 
@@ -160,6 +138,4 @@ fn main() {
             kill_process(process_id);
         }
     }
-
-
 }
