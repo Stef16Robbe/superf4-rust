@@ -9,13 +9,6 @@ basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 3. ???
 4. profit
 
-## TODO:
-- [x] read cli argument input, if none:
-- [x] read user input after showing processes
-- [x] get all process ids by process name
-- [x] kill all processes with ids
-
-
 ## (some) Sources:
 - https://docs.rs/winapi/0.3.8/winapi
 - https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess
