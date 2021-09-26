@@ -11,3 +11,6 @@ winapi = { version = "0.3", features = [
     "winnt",
     "handleapi",
 ] }
+
+[dependencies]
+structopt = "0.3.13"
