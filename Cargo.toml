@@ -2,6 +2,15 @@
 name = "superf4-rust"
 version = "0.1.0"
 edition = "2018"
+authors = ["Stef Robbe stef.robbe@gmail.com"]
+license = "GNU"
+description = "Basic CLI Rust implementation of Superf4"
+readme = "README.md"
+homepage = "https://github.com/Stef16Robbe/superf4-rust"
+repository = "https://github.com/Stef16Robbe/superf4-rust"
+keywords = ["cli", "superf4", "kill"]
+categories = ["command-line-utilities"]
+
 
 # I tried [dependencies] \n winapi = "0.3", found this in a random pr, it works. (https://github.com/xu-cheng/howlong/issues/3)
 [target.'cfg(windows)'.dependencies]
