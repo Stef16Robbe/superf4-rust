@@ -4,7 +4,7 @@ basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 ##### final: press ctrl + alt + f4 anytime and program will be closed
 
 ## Steps to take:
-- [ ] listen for ctrl + alt + f4
+- [x] listen for ctrl + alt + f4
 - [ ] get id from current top window
 - [x] kill process
 - [ ] ???
