@@ -35,7 +35,8 @@ basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 - https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
 - https://docs.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-process32firstw 
 - https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStringExt.html#tymethod.from_wide
-- 
+- https://rust-cli.github.io/book/tutorial/cli-args.html
+- https://egghead.io/lessons/rust-read-user-input-from-stdin-in-rust
 - 
 - 
 - 
