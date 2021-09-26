@@ -1,38 +1,41 @@
 use std::io;
 use std::mem::size_of;
 use std::ffi::OsString;
-use structopt::StructOpt;
 use winapi::um::winnt::HANDLE;
 use winapi::um::winnt::PROCESS_ALL_ACCESS;
 use winapi::um::handleapi::CloseHandle;
 use std::os::windows::ffi::OsStringExt;
 use winapi::um::processthreadsapi::{TerminateProcess, OpenProcess};
 use winapi::um::tlhelp32::{Process32NextW, Process32FirstW, CreateToolhelp32Snapshot, TH32CS_SNAPPROCESS, PROCESSENTRY32W};
+use winapi;
+use winapi::shared::windef::HHOOK;
+use winapi::um::winuser;
+use winapi::um::winuser::{HC_ACTION, KBDLLHOOKSTRUCT, CallNextHookEx, WH_KEYBOARD_LL, WM_KEYDOWN, WM_SYSKEYDOWN, WM_SYSKEYUP, WM_KEYUP, VK_F4, VK_LMENU, VK_LCONTROL};
+use std::convert::TryFrom;
 
-#[derive(Debug)]
-#[derive(StructOpt)]
-struct Cli {
-    #[structopt(default_value = "")]
-    process_name: String,
-}
+static mut HOOK_HANDLE: Option<HHOOK> = None;
+static mut CTRL_DOWN: bool = false;
+static mut ALT_DOWN: bool = false;
+static mut F4_DOWN: bool = false;
+static mut KILLING: bool = false;
 
 unsafe fn kill_process(process_id: u32) -> HANDLE {
     let h_process: HANDLE;
-
-    // Powershell: "Get-Process"
-    // example, Spotify id  = 1736...
-    // 419 | 53 | 63152 | 105304 | 16.20 | 1488 | 1 | Spotify
     h_process = OpenProcess(PROCESS_ALL_ACCESS, 0, process_id);
-
-    // pretty sure this fucks up your applications lol
-    TerminateProcess(h_process, 1);
+    
+    if !KILLING {
+        KILLING = true;
+        // pretty sure this fucks up your applications lol
+        TerminateProcess(h_process, 1);
+        
+    };
 
     h_process
 }
 
-fn process_handler(process_name: &str) -> Vec<u32> {
+fn process_handler(process_name: &str) -> u32 {
     let h_process_snap: HANDLE;
-    let mut process_ids = Vec::new();
+    // let mut process_ids = Vec::new();
 
     let mut pe32 = &mut PROCESSENTRY32W {
         dwSize: 0,
@@ -56,12 +59,11 @@ fn process_handler(process_name: &str) -> Vec<u32> {
                 let os_string = OsString::from_wide(&pe32.szExeFile[..]);
                 let exe_file_string: String = os_string.into_string().unwrap().replace("\u{0}", "");
     
+                // if exe_file_string == process_name {
+                //     process_ids.push(pe32.th32ProcessID)
+                // }
                 if exe_file_string == process_name {
-                    process_ids.push(pe32.th32ProcessID)
-                } else if process_name == "" {
-                    for file_name in exe_file_string.split("\n") {
-                        println!("{}", file_name);
-                    }
+                    return pe32.th32ProcessID;
                 }
             }
         } else {
@@ -70,38 +72,118 @@ fn process_handler(process_name: &str) -> Vec<u32> {
         CloseHandle(h_process_snap);
     }
 
-    process_ids
+    0
 
+}
+
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644985(v=vs.85)
+extern "system" fn hook_callback(code: i32, wparam: usize, lparam: isize) -> isize {
+    let CTRL: u32 = u32::try_from(VK_LCONTROL).unwrap();
+    let ALT: u32 = u32::try_from(VK_LMENU).unwrap();
+    let F4: u32 = u32::try_from(VK_F4).unwrap();
+
+    if code < HC_ACTION {
+        unsafe {
+            if let Some(hook_id) = HOOK_HANDLE {
+                return CallNextHookEx(hook_id, code, wparam, lparam);
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    let keypress: KBDLLHOOKSTRUCT = unsafe { *(lparam as *mut KBDLLHOOKSTRUCT) };
+    let is_ctrl = keypress.vkCode == CTRL;
+    let is_alt = keypress.vkCode == ALT;
+    let is_f4 = keypress.vkCode == F4;
+
+    if wparam == WM_KEYDOWN as usize || wparam == WM_SYSKEYDOWN as usize {
+        unsafe {
+            if is_ctrl {
+                CTRL_DOWN = true;
+            } else if is_alt {
+                ALT_DOWN = true;
+            } else if is_f4 {
+                F4_DOWN = true;
+            }
+        }
+    }
+    
+    // this can be neater but cba
+    if wparam == WM_KEYUP as usize {
+        unsafe {
+            KILLING = false;
+            if is_ctrl {
+                CTRL_DOWN = false
+            }
+            if is_alt {
+                ALT_DOWN = false
+            }
+            if is_f4 {
+                F4_DOWN = false
+            }
+        }
+    }
+    if wparam == WM_SYSKEYUP as usize {
+        unsafe {
+            KILLING = false;
+            if is_ctrl {
+                CTRL_DOWN = false
+            }
+            if is_alt {
+                ALT_DOWN = false
+            }
+            if is_f4 {
+                F4_DOWN = false
+            }
+        }
+    }
+
+    unsafe {
+        if CTRL_DOWN && ALT_DOWN && F4_DOWN {
+            println!("Time to kill!");
+            // TODO:
+            // get process id from top window
+            let process_name = "Discord.exe";
+            let process_id = process_handler(&process_name);
+        
+            if process_id == 0 {
+                println!("No process found called '{}'", process_name)
+            }
+        
+            kill_process(process_id);
+
+            // prevent this keypress from being propagated
+            return 1;
+        }
+    }
+
+    0
 }
 
 /*
 *
 * Basic SuperF4 (https://github.com/stefansundin/superf4) implementation in Rust 
-* Usage: `cargo run -- {process name}
+* Usage: press `ctrl + alt + f4` on any selected program
 * 
 */
 fn main() {
-    let args = Cli::from_args();
-    let mut process_name = String::new();
-
-    if &args.process_name == "" {
-        process_handler("");
-        println!("Enter a process name...");
-        io::stdin().read_line(&mut process_name).unwrap();
-        process_name = process_name.replace("\r", "").replace("\n", "");
-    } else {
-        process_name = args.process_name;
-    }
-
-    let process_ids = process_handler(&process_name);
-
-    if process_ids == Vec::new() {
-        println!("No process found called '{}'", process_name)
-    }
-
+    // https://github.com/linde12/winapi-testing !!!!
     unsafe {
-        for process_id in process_ids {
-            kill_process(process_id);
+        let hook_id = winuser::SetWindowsHookExA(
+            WH_KEYBOARD_LL,
+            Some(hook_callback),
+            std::ptr::null_mut(),
+            0,
+        );
+        HOOK_HANDLE = Some(hook_id);
+
+        let msg: winuser::LPMSG = std::ptr::null_mut();
+        while winuser::GetMessageA(msg, std::ptr::null_mut(), 0, 0) > 0 {
+            winuser::TranslateMessage(msg);
+            winuser::DispatchMessageA(msg);
         }
+
+        winapi::um::winuser::UnhookWindowsHookEx(hook_id);
     }
 }

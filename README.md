@@ -1,13 +1,14 @@
 # superf4-rust
 basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 
-##### alpha: using cli
+##### final: press ctrl + alt + f4 anytime and program will be closed
 
 ## Steps to take:
-1. get list of all processes running
-2. kill chosen process
-3. ???
-4. profit
+- [ ] listen for ctrl + alt + f4
+- [ ] get id from current top window
+- [x] kill process
+- [ ] ???
+- [ ] profit
 
 ## (some) Sources:
 - https://docs.rs/winapi/0.3.8/winapi
@@ -28,10 +29,12 @@ basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 - https://stackoverflow.com/questions/69146231/printing-tchar-array-as-unicode-string-rust-winapi
 - https://docs.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-process32firstw 
 - https://doc.rust-lang.org/std/os/windows/ffi/trait.OsStringExt.html#tymethod.from_wide
-- https://rust-cli.github.io/book/tutorial/cli-args.html
-- https://egghead.io/lessons/rust-read-user-input-from-stdin-in-rust
-- 
-- 
+- https://github.com/linde12/winapi-testing
+- https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+- https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644985(v=vs.85)
+- https://docs.microsoft.com/en-us/windows/win32/inputdev/wm-keydown?redirectedfrom=MSDN
+- https://github.dev/stefansundin/superf4/blob/master/superf4.c
+- https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-callnexthookex
 - 
 - 
 - 
