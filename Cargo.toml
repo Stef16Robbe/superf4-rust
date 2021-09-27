@@ -20,6 +20,7 @@ winapi = { version = "0.3", features = [
     "winnt",
     "handleapi",
     "winuser",
+    "psapi",
 ] }
 
 [dependencies]
