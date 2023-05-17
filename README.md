@@ -1,6 +1,8 @@
 # superf4-rust
 basic [superf4](https://github.com/stefansundin/superf4) implementation in Rust
 
+**this was a learning project for fun and it does not work properly. I highly suggest you instead use the above linked original SuperF4 that works great :)**
+
 ##### final: press ctrl + alt + f4 anytime and program will be closed
 
 ## Steps to take:
